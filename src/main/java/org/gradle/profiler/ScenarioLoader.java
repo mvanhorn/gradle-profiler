@@ -63,6 +63,7 @@ class ScenarioLoader {
     private static final String APPLY_CPP_SOURCE_CHANGE_TO = "apply-cpp-change-to";
     private static final String APPLY_H_SOURCE_CHANGE_TO = "apply-h-change-to";
     private static final String CLEAR_BUILD_CACHE_BEFORE = "clear-build-cache-before";
+    private static final String BUILD_CACHE_DIR = "build-cache-dir";
     private static final String CLEAR_GRADLE_USER_HOME_BEFORE = "clear-gradle-user-home-before";
     private static final String CLEAR_INSTANT_EXECUTION_STATE_BEFORE = "clear-instant-execution-state-before";
     private static final String CLEAR_CONFIGURATION_CACHE_STATE_BEFORE = "clear-configuration-cache-state-before";
@@ -139,6 +140,7 @@ class ScenarioLoader {
             TASKS,
             CLEANUP_TASKS,
             GRADLE_ARGS,
+            BUILD_CACHE_DIR,
             RUN_USING,
             SYSTEM_PROPERTIES,
             WARM_UP_COUNT,

@@ -800,6 +800,35 @@ class ScenarioLoaderTest extends Specification {
         scenarios*.name == ["scenario1"]
     }
 
+    def "clears configured build cache using a #pathKind path"() {
+        given:
+        gradleUserHomeDir = tmpDir.newFolder()
+        def settings = settingsBuilder().build()
+        def cacheDir = new File(projectDir, "build/build-cache")
+        cacheDir.mkdirs()
+        def entry = new File(cacheDir, "12345678901234567890123456789012")
+        entry.text = "cached"
+        def cachePath = pathKind == "relative" ? "build/build-cache" : cacheDir.absolutePath.replace('\\', '/')
+        scenarioFile << """
+            default {
+                tasks = ["help"]
+                clear-build-cache-before = SCENARIO
+                build-cache-dir = "$cachePath"
+            }
+        """
+
+        when:
+        def scenarios = loadScenarios(scenarioFile, settings, Mock(GradleBuildConfigurationReader))
+        scenarios[0].buildMutators.each { it.beforeScenario(Mock(ScenarioContext)) }
+
+        then:
+        !entry.exists()
+        cacheDir.isDirectory()
+
+        where:
+        pathKind << ["relative", "absolute"]
+    }
+
     def "rejects --single-shot with '#mutatorKey' mutation"() {
         given:
         def settings = settingsBuilder(GradleBuildInvoker.Cli, true, true).build()

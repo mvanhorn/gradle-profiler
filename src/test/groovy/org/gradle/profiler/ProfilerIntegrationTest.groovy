@@ -1178,13 +1178,26 @@ class ProfilerIntegrationTest extends AbstractProfilerIntegrationTest {
         lines.get(19).matches("measured build #10,$SAMPLE")
     }
 
-    def "clears build cache when asked"() {
+    def "clears build cache when asked with custom cache #customCache and caching enabled #cacheEnabled"() {
         given:
+        if (customCache) {
+            file("settings.gradle") << """
+                buildCache {
+                    local {
+                        directory = new File(settingsDir, "local-build-cache")
+                    }
+                }
+            """
+            if (cacheEnabled) {
+                file("local-build-cache").mkdirs()
+                file("local-build-cache/12345678901234567890123456789012").text = "cached"
+            }
+        }
         buildFile << """
             apply plugin: "java"
 
             def cacheFiles(File gradleHome) {
-                file("\${gradleHome}/caches/build-cache-1").listFiles().findAll { it.name.length() == 32 }
+                file(${customCache ? '"local-build-cache"' : '"\${gradleHome}/caches/build-cache-1"'}).listFiles()?.findAll { it.name.length() == 32 }
             }
 
             task checkNoCacheBefore {
@@ -1198,7 +1211,7 @@ class ProfilerIntegrationTest extends AbstractProfilerIntegrationTest {
             task checkHasCacheAfter {
                 mustRunAfter compileJava
                 doFirst {
-                    assert !cacheFiles(gradle.gradleUserHomeDir).empty
+                    assert ${cacheEnabled ? '!cacheFiles(gradle.gradleUserHomeDir).empty' : 'cacheFiles(gradle.gradleUserHomeDir) == null'}
                 }
             }
         """
@@ -1219,7 +1232,8 @@ class ProfilerIntegrationTest extends AbstractProfilerIntegrationTest {
                 // Warm daemons don't allow cleaning caches
                 daemon = cold
                 clear-build-cache-before = BUILD
-                gradle-args = ["--build-cache"]
+                ${customCache ? 'build-cache-dir = "local-build-cache"' : ''}
+                gradle-args = ["${cacheEnabled ? '--build-cache' : '--no-build-cache'}"]
                 tasks = ["checkNoCacheBefore", "clean", "compileJava", "checkHasCacheAfter"]
             }
         """
@@ -1231,7 +1245,10 @@ class ProfilerIntegrationTest extends AbstractProfilerIntegrationTest {
         noExceptionThrown()
 
         where:
-        gradleVersion << [minimalSupportedGradleVersion]
+        gradleVersion                 | customCache | cacheEnabled
+        minimalSupportedGradleVersion | false       | true
+        minimalSupportedGradleVersion | true        | true
+        minimalSupportedGradleVersion | true        | false
     }
 
     // See: https://github.com/gradle/gradle-profiler/issues/603")

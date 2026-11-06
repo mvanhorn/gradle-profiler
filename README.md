@@ -508,6 +508,15 @@ These mutators can be scheduled to execute at different points in the build benc
 
 - `clear-ide-cache-before`: Invalidates the IDE caches. Scheduling to run before cleanup (`CLEANUP`) is not supported. Only applies to IDE sync scenarios (see [IDE sync support](#ide-sync-support)). The deprecated alias `clear-android-studio-cache-before` is still accepted and prints a warning.
 - `clear-build-cache-before`: Deletes the contents of the build cache at the given schedule.
+- `build-cache-dir`: Optionally selects the local build cache directory for `clear-build-cache-before`. Relative paths are resolved against the project directory (`--project-dir`); absolute paths are used as given. The path must match the local build cache directory configured in `settings.gradle` or `settings.gradle.kts`; it is not discovered automatically. Without this option, cleanup uses the build caches in Gradle user home. Cache entries are deleted while lock and metadata files and the cache directory are retained. A missing directory is treated as empty.
+
+  For a local cache configured at `build/build-cache`, use:
+
+  ```hocon
+  clear-build-cache-before = BUILD
+  build-cache-dir = "build/build-cache"
+  ```
+
 - `clear-configuration-cache-state-before`: Deletes the contents of the `.gradle/configuration-cache-state` directory.
 - `clear-gradle-user-home-before`: Deletes the contents of the Gradle user home directory.
   The mutator retains the `wrapper` cache in the Gradle user home, since the downloaded wrapper in that location is used to run Gradle.
